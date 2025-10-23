@@ -10,7 +10,7 @@ app = Flask(__name__)
 # ========================================
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///reportes.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SECRET_KEY'] = 'mi-clave-secreta-bogota-2024'
+app.config['SECRET_KEY'] = 'MiApp-BogotaCiudadana-2024!Reportes@Seguros789'
 
 # Configurar zona horaria de Colombia
 COLOMBIA_TZ = pytz.timezone('America/Bogota')
