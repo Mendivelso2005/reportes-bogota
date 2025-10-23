@@ -2,15 +2,37 @@ from flask import Flask, render_template, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 import pytz
+import os
 
 app = Flask(__name__)
 
 # ========================================
-# CONFIGURACIÓN SQLITE (BASE DE DATOS LOCAL)
+# CONFIGURACIÓN DE BASE DE DATOS
 # ========================================
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///reportes.db'
+# Si existe DATABASE_URL en el entorno, usa PostgreSQL (Render)
+# Si no, usa SQLite (local)
+
+database_url = os.getenv('DATABASE_URL')
+
+if database_url:
+    # Estamos en Render - usar PostgreSQL
+    # Fix: Render usa postgres:// pero SQLAlchemy necesita postgresql://
+    if database_url.startswith('postgres://'):
+        database_url = database_url.replace('postgres://', 'postgresql://', 1)
+    
+    app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+    app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+        'pool_pre_ping': True,
+        'pool_recycle': 300,
+    }
+    print("🌐 Usando PostgreSQL (Render)")
+else:
+    # Estamos en local - usar SQLite
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///reportes.db'
+    print("📂 Usando SQLite (local)")
+
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SECRET_KEY'] = 'MiApp-BogotaCiudadana-2024!Reportes@Seguros789'
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'mi-clave-secreta-bogota-2024')
 
 # Configurar zona horaria de Colombia
 COLOMBIA_TZ = pytz.timezone('America/Bogota')
