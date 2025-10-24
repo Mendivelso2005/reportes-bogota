@@ -1,17 +1,16 @@
 from flask import Flask, render_template, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
-from dotenv import load_dotenv
-import os, pytz
-# Cargar variables del archivo .env
-load_dotenv()
+import pytz
 
 app = Flask(__name__)
 
-# CONFIGURACIÓN POSTGRESQL (SUPABASE)
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
+# ========================================
+# CONFIGURACIÓN SQLITE (BASE DE DATOS LOCAL)
+# ========================================
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///reportes.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
+app.config['SECRET_KEY'] = 'MiApp-BogotaCiudadana-2024!Reportes@Seguros789'
 
 # Configurar zona horaria de Colombia
 COLOMBIA_TZ = pytz.timezone('America/Bogota')
@@ -133,7 +132,7 @@ if __name__ == '__main__':
     print("\n" + "="*50)
     print("🚀 SERVIDOR INICIADO")
     print("="*50)
-    print(print("📂 Base de datos: PostgreSQL (Supabase)"))
+    print("📂 Base de datos: SQLite (reportes.db)")
     print("🌐 Abre tu navegador en: http://localhost:5000")
     print("📋 Ver reportes: http://localhost:5000/reportes")
     print("="*50 + "\n")
