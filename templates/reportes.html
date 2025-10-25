@@ -118,6 +118,7 @@
               <th class="px-4 py-3 text-left text-sm font-semibold">ID</th>
               <th class="px-4 py-3 text-left text-sm font-semibold">Tipo</th>
               <th class="px-4 py-3 text-left text-sm font-semibold">Descripción</th>
+              <th class="px-4 py-3 text-left text-sm font-semibold">Imagen</th>
               <th class="px-4 py-3 text-left text-sm font-semibold">Ciudadano</th>
               <th class="px-4 py-3 text-left text-sm font-semibold">Entidad</th>
               <th class="px-4 py-3 text-left text-sm font-semibold">Fecha y Hora</th>
@@ -139,6 +140,13 @@
               </td>
               <td class="px-4 py-3 text-sm text-gray-700 max-w-xs">
                 {{ reporte.descripcion[:100] }}{% if reporte.descripcion|length > 100 %}...{% endif %}
+              </td>
+              <td class="px-4 py-3 text-center">
+                {% if reporte.imagen %}
+                  <img src="/static/images/{{ reporte.imagen }}" alt="Imagen" style="max-width:80px;max-height:80px;border-radius:8px;">
+                {% else %}
+                  <span class="text-gray-400 text-xs">Sin imagen</span>
+                {% endif %}
               </td>
               <td class="px-4 py-3 text-sm text-gray-700">{{ reporte.nombre }}</td>
               <td class="px-4 py-3 text-sm text-gray-600">{{ reporte.entidad }}</td>

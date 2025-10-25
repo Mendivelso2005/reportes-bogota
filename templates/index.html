@@ -257,6 +257,14 @@
             </div>
             
             <form id="reporteForm" class="space-y-5">
+              <!-- Imagen del reporte -->
+              <div class="group">
+                <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                  <span class="text-xl">📷</span>
+                  Imagen (opcional)
+                </label>
+                <input type="file" id="imagen" name="imagen" accept="image/*" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-teal-100 focus:border-teal-500 transition-all bg-white text-gray-700 font-medium" />
+              </div>
               
               <!-- Tipo de problema -->
               <div class="group">
@@ -354,32 +362,39 @@
           
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {% for reporte in reportes[:6] %}
-            <div class="group relative bg-white border-2 border-gray-100 rounded-2xl p-6 hover-lift hover:border-teal-200 transition-all">
+            <div class="group relative bg-white border border-gray-200 rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.03] cursor-pointer" onclick='mostrarModal({{ reporte|tojson|safe }})'>
               <div class="absolute top-4 right-4">
-                <button onclick="eliminarReporte({{ reporte.id }})" 
+                <button onclick="event.stopPropagation(); eliminarReporte({{ reporte.id }})" 
                         class="opacity-0 group-hover:opacity-100 bg-red-500 hover:bg-red-600 text-white p-2 rounded-lg transition-all">
                   <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
                   </svg>
                 </button>
               </div>
-              
-              <div class="flex items-start gap-3 mb-4">
-                <span class="px-3 py-1 bg-gradient-to-r from-teal-100 to-blue-100 text-teal-700 text-xs font-bold rounded-full">
+
+              {% if reporte.imagen %}
+                <div class="flex justify-center mb-3">
+                  <img src="/static/images/{{ reporte.imagen }}" alt="Imagen del reporte" class="rounded-xl shadow-lg max-w-[180px] max-h-[140px] object-cover border-2 border-teal-100" />
+                </div>
+              {% endif %}
+
+              <div class="flex items-center gap-2 mb-4">
+                <span class="px-3 py-1 rounded-full font-bold text-xs"
+                  style="background: linear-gradient(90deg, #14b8a6 0%, #3b82f6 100%); color: white; box-shadow: 0 2px 8px #14b8a633;">
                   {{ reporte.tipo }}
                 </span>
               </div>
-              
-              <p class="text-gray-700 text-sm mb-4 line-clamp-3">{{ reporte.descripcion }}</p>
-              
+
+              <p class="text-gray-700 text-base mb-4 line-clamp-3 font-medium">{{ reporte.descripcion }}</p>
+
               <div class="space-y-2 text-xs text-gray-500">
                 <div class="flex items-center gap-2">
                   <span>👤</span>
-                  <span class="font-medium">{{ reporte.nombre }}</span>
+                  <span class="font-semibold text-teal-700">{{ reporte.nombre }}</span>
                 </div>
                 <div class="flex items-center gap-2">
                   <span>🏢</span>
-                  <span>{{ reporte.entidad }}</span>
+                  <span class="font-semibold">{{ reporte.entidad }}</span>
                 </div>
                 <div class="flex items-center gap-2">
                   <span>🕐</span>
@@ -387,6 +402,15 @@
                 </div>
               </div>
             </div>
+  <!-- MODAL DE REPORTE -->
+  <div id="modalReporte" class="fixed inset-0 bg-black/40 flex items-center justify-center z-[9999] hidden">
+    <div class="bg-white rounded-3xl shadow-2xl p-8 max-w-lg w-full relative animate-fadeIn border border-teal-100 flex flex-col items-center" style="box-shadow: 0 8px 32px #14b8a622;">
+      <button onclick="cerrarModal()" class="absolute top-4 right-4 bg-teal-50 hover:bg-teal-100 rounded-full p-2 shadow transition-all">
+        <svg class="w-6 h-6 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+      </button>
+      <div id="modalContenido" class="w-full"></div>
+    </div>
+  </div>
             {% endfor %}
           </div>
         </div>
@@ -398,6 +422,31 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <script>
+    function mostrarModal(reporte) {
+      const modal = document.getElementById('modalReporte');
+      const contenido = document.getElementById('modalContenido');
+      let imgHtml = '';
+      if (reporte.imagen) {
+        imgHtml = `<img src='/static/images/${reporte.imagen}' alt='Imagen del reporte' class='mb-4 rounded-xl shadow-lg max-w-full max-h-60 mx-auto border-2 border-teal-100' />`;
+      }
+      contenido.innerHTML = `
+        <div class='flex flex-col items-center'>
+          ${imgHtml}
+          <span class='px-4 py-1 rounded-full font-bold text-sm mb-3' style='background: linear-gradient(90deg, #14b8a6 0%, #3b82f6 100%); color: white; box-shadow: 0 2px 8px #14b8a633;'>${reporte.tipo}</span>
+          <p class='text-gray-800 text-lg mb-3 font-semibold text-center'>${reporte.descripcion}</p>
+          <div class='space-y-2 text-sm text-gray-500 text-center w-full'>
+            <div class='flex items-center justify-center gap-2'><span>👤</span> <span class='font-semibold text-teal-700'>${reporte.nombre}</span></div>
+            <div class='flex items-center justify-center gap-2'><span>🏢</span> <span class='font-semibold'>${reporte.entidad}</span></div>
+            <div class='flex items-center justify-center gap-2'><span>🕐</span> ${reporte.fecha_creacion}</div>
+          </div>
+        </div>
+      `;
+      modal.classList.remove('hidden');
+    }
+
+    function cerrarModal() {
+      document.getElementById('modalReporte').classList.add('hidden');
+    }
     // Inicializar mapa
     const map = L.map('map').setView([4.711, -74.0721], 12);
     
@@ -452,15 +501,22 @@
     document.getElementById('reportesHoy').textContent = reportesHoy;
     
     reportes.forEach(r => {
+      let imgHtml = '';
+      if (r.imagen) {
+        imgHtml = `<div class='flex justify-center mb-2'><img src='/static/images/${r.imagen}' alt='Imagen del reporte' class='rounded-xl shadow-lg max-w-[120px] max-h-[90px] object-cover border-2 border-teal-100' /></div>`;
+      }
       const marker = L.marker([r.lat, r.lng]).addTo(map)
         .bindPopup(`
-          <div class="p-3 min-w-[200px]">
-            <div class="font-bold text-teal-700 mb-2">${r.tipo}</div>
-            <p class="text-sm text-gray-700 mb-2">${r.descripcion}</p>
-            <div class="space-y-1 text-xs text-gray-600">
-              <div>🏢 ${r.entidad}</div>
-              <div>👤 ${r.nombre}</div>
-              <div>🕐 ${r.fecha_creacion}</div>
+          <div class="bg-white rounded-2xl shadow-xl p-4 max-w-xs w-full border border-gray-200 animate-fadeIn">
+            ${imgHtml}
+            <div class="flex items-center gap-2 mb-2">
+              <span class="px-2 py-1 rounded-full font-bold text-xs" style="background: linear-gradient(90deg, #14b8a6 0%, #3b82f6 100%); color: white; box-shadow: 0 2px 8px #14b8a633;">${r.tipo}</span>
+            </div>
+            <div class="text-gray-700 text-sm mb-2 font-medium text-center">${r.descripcion}</div>
+            <div class="space-y-1 text-xs text-gray-500 text-center">
+              <div><span>👤</span> <span class="font-semibold text-teal-700">${r.nombre}</span></div>
+              <div><span>🏢</span> <span class="font-semibold">${r.entidad}</span></div>
+              <div><span>🕐</span> ${r.fecha_creacion}</div>
             </div>
           </div>
         `);
@@ -469,42 +525,42 @@
     // Enviar reporte
     document.getElementById('reporteForm').addEventListener('submit', async function(e) {
       e.preventDefault();
-      
+
       const tipo = document.getElementById('tipo').value;
       const nombre = document.getElementById('nombre').value;
       const descripcion = document.getElementById('descripcion').value;
+      const imagenInput = document.getElementById('imagen');
+      const imagen = imagenInput.files[0];
 
       if (!ubicacionSeleccionada) {
         alert('⚠️ Por favor, selecciona una ubicación en el mapa');
         return;
       }
-
       if (!nombre.trim()) {
         alert('⚠️ Por favor, ingresa tu nombre');
         return;
       }
-
       if (!descripcion.trim()) {
         alert('⚠️ Por favor, describe el problema');
         return;
       }
 
-      const data = {
-        tipo,
-        nombre,
-        descripcion,
-        lat: ubicacionSeleccionada.lat,
-        lng: ubicacionSeleccionada.lng,
-        entidad: entidadPorTipo[tipo]
-      };
+      const formData = new FormData();
+      formData.append('tipo', tipo);
+      formData.append('nombre', nombre);
+      formData.append('descripcion', descripcion);
+      formData.append('lat', ubicacionSeleccionada.lat);
+      formData.append('lng', ubicacionSeleccionada.lng);
+      formData.append('entidad', entidadPorTipo[tipo]);
+      if (imagen) {
+        formData.append('imagen', imagen);
+      }
 
       try {
         const res = await fetch('/reporte', {
           method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify(data)
+          body: formData
         });
-
         if (res.ok) {
           alert('✅ Reporte agregado correctamente');
           location.reload();

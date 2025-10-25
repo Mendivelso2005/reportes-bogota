@@ -1,4 +1,6 @@
 from flask import Flask, render_template, request, jsonify
+import os
+from werkzeug.utils import secure_filename
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 import pytz
@@ -21,7 +23,6 @@ db = SQLAlchemy(app)
 # MODELO DE DATOS
 class Reporte(db.Model):
     __tablename__ = 'reportes'
-    
     id = db.Column(db.Integer, primary_key=True)
     tipo = db.Column(db.String(50), nullable=False)
     nombre = db.Column(db.String(100), nullable=False)
@@ -30,15 +31,14 @@ class Reporte(db.Model):
     lng = db.Column(db.Float, nullable=False)
     entidad = db.Column(db.String(100), nullable=False)
     fecha_creacion = db.Column(db.DateTime, default=lambda: datetime.now(COLOMBIA_TZ))
-    
+    imagen = db.Column(db.String(255), nullable=True)
+
     def to_dict(self):
-        # Asegurar que la fecha esté en zona horaria de Colombia
         fecha = self.fecha_creacion
         if fecha.tzinfo is None:
             fecha = COLOMBIA_TZ.localize(fecha)
         else:
             fecha = fecha.astimezone(COLOMBIA_TZ)
-            
         return {
             'id': self.id,
             'tipo': self.tipo,
@@ -47,7 +47,8 @@ class Reporte(db.Model):
             'lat': self.lat,
             'lng': self.lng,
             'entidad': self.entidad,
-            'fecha_creacion': fecha.strftime('%Y-%m-%d %H:%M:%S')
+            'fecha_creacion': fecha.strftime('%Y-%m-%d %H:%M:%S'),
+            'imagen': self.imagen
         }
 
 # Crear tablas
@@ -69,36 +70,60 @@ def lista_reportes():
 @app.route('/reporte', methods=['POST'])
 def agregar_reporte():
     try:
-        data = request.get_json()
-        
-        if not data:
-            return jsonify({'error': 'Datos vacíos'}), 400
-        
-        campos_requeridos = ['tipo', 'nombre', 'descripcion', 'lat', 'lng', 'entidad']
-        for campo in campos_requeridos:
-            if campo not in data:
-                return jsonify({'error': f'Falta el campo: {campo}'}), 400
-        
-        nuevo_reporte = Reporte(
-            tipo=data['tipo'],
-            nombre=data['nombre'],
-            descripcion=data['descripcion'],
-            lat=data['lat'],
-            lng=data['lng'],
-            entidad=data['entidad']
-        )
-        
-        db.session.add(nuevo_reporte)
-        db.session.commit()
-        
-        print(f"✅ Reporte #{nuevo_reporte.id} guardado")
-        
-        return jsonify({
-            'status': 'success',
-            'message': 'Reporte agregado correctamente',
-            'reporte': nuevo_reporte.to_dict()
-        }), 201
-        
+        if request.content_type.startswith('multipart/form-data'):
+            tipo = request.form.get('tipo')
+            nombre = request.form.get('nombre')
+            descripcion = request.form.get('descripcion')
+            lat = request.form.get('lat')
+            lng = request.form.get('lng')
+            entidad = request.form.get('entidad')
+            imagen = request.files.get('imagen')
+            filename = None
+            if imagen and imagen.filename:
+                filename = secure_filename(imagen.filename)
+                ruta_imagen = os.path.join('static', 'images', filename)
+                imagen.save(os.path.join(app.root_path, ruta_imagen))
+            nuevo_reporte = Reporte(
+                tipo=tipo,
+                nombre=nombre,
+                descripcion=descripcion,
+                lat=lat,
+                lng=lng,
+                entidad=entidad,
+                imagen=filename
+            )
+            db.session.add(nuevo_reporte)
+            db.session.commit()
+            print(f"✅ Reporte #{nuevo_reporte.id} guardado con imagen")
+            return jsonify({
+                'status': 'success',
+                'message': 'Reporte agregado correctamente',
+                'reporte': nuevo_reporte.to_dict()
+            }), 201
+        else:
+            data = request.get_json()
+            if not data:
+                return jsonify({'error': 'Datos vacíos'}), 400
+            campos_requeridos = ['tipo', 'nombre', 'descripcion', 'lat', 'lng', 'entidad']
+            for campo in campos_requeridos:
+                if campo not in data:
+                    return jsonify({'error': f'Falta el campo: {campo}'}), 400
+            nuevo_reporte = Reporte(
+                tipo=data['tipo'],
+                nombre=data['nombre'],
+                descripcion=data['descripcion'],
+                lat=data['lat'],
+                lng=data['lng'],
+                entidad=data['entidad']
+            )
+            db.session.add(nuevo_reporte)
+            db.session.commit()
+            print(f"✅ Reporte #{nuevo_reporte.id} guardado")
+            return jsonify({
+                'status': 'success',
+                'message': 'Reporte agregado correctamente',
+                'reporte': nuevo_reporte.to_dict()
+            }), 201
     except Exception as e:
         db.session.rollback()
         print(f"❌ Error: {str(e)}")
