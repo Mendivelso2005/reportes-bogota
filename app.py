@@ -1,3 +1,4 @@
+
 from flask import Flask, render_template, request, jsonify
 import os
 from werkzeug.utils import secure_filename
@@ -54,7 +55,6 @@ class Reporte(db.Model):
 # Crear tablas
 with app.app_context():
     db.create_all()
-    print("✅ Base de datos SQLite creada: reportes.db")
 
 # RUTAS
 @app.route('/')
@@ -94,7 +94,6 @@ def agregar_reporte():
             )
             db.session.add(nuevo_reporte)
             db.session.commit()
-            print(f"✅ Reporte #{nuevo_reporte.id} guardado con imagen")
             return jsonify({
                 'status': 'success',
                 'message': 'Reporte agregado correctamente',
@@ -118,7 +117,6 @@ def agregar_reporte():
             )
             db.session.add(nuevo_reporte)
             db.session.commit()
-            print(f"✅ Reporte #{nuevo_reporte.id} guardado")
             return jsonify({
                 'status': 'success',
                 'message': 'Reporte agregado correctamente',
@@ -126,7 +124,6 @@ def agregar_reporte():
             }), 201
     except Exception as e:
         db.session.rollback()
-        print(f"❌ Error: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/eliminar/<int:id>', methods=['DELETE'])
@@ -135,17 +132,12 @@ def eliminar_reporte(id):
         reporte = Reporte.query.get_or_404(id)
         db.session.delete(reporte)
         db.session.commit()
-        
-        print(f"✅ Reporte #{id} eliminado")
-        
         return jsonify({
             'status': 'success',
             'message': 'Reporte eliminado correctamente'
         }), 200
-        
     except Exception as e:
         db.session.rollback()
-        print(f"❌ Error: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/reportes', methods=['GET'])
@@ -153,8 +145,7 @@ def api_reportes():
     reportes = Reporte.query.order_by(Reporte.fecha_creacion.desc()).all()
     return jsonify([r.to_dict() for r in reportes])
 
-if __name__ == '__main__':
-    print("\n" + "="*50)
+# No incluir app.run() para Render/gunicorn
     print("🚀 SERVIDOR INICIADO")
     print("="*50)
     print("📂 Base de datos: SQLite (reportes.db)")
