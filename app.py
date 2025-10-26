@@ -1,6 +1,7 @@
 
 from flask import Flask, render_template, request, jsonify
 import os
+import sqlite3
 from werkzeug.utils import secure_filename
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
@@ -52,8 +53,22 @@ class Reporte(db.Model):
             'imagen': self.imagen
         }
 
-# Crear tablas
+def check_and_reset_db():
+    db_path = os.path.join(app.root_path, 'reportes.db')
+    if os.path.exists(db_path):
+        try:
+            conn = sqlite3.connect(db_path)
+            cursor = conn.cursor()
+            cursor.execute("PRAGMA table_info(reportes)")
+            columns = [col[1] for col in cursor.fetchall()]
+            conn.close()
+            if 'imagen' not in columns:
+                os.remove(db_path)
+        except Exception:
+            pass
+
 with app.app_context():
+    check_and_reset_db()
     db.create_all()
 
 # RUTAS
