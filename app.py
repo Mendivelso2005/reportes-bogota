@@ -12,7 +12,7 @@ app = Flask(__name__)
 # ========================================
 # CONFIGURACIÓN SQLITE (BASE DE DATOS LOCAL)
 # ========================================
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///reportes.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///reportes2.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = 'MiApp-BogotaCiudadana-2024!Reportes@Seguros789'
 
@@ -54,7 +54,7 @@ class Reporte(db.Model):
         }
 
 def check_and_reset_db():
-    db_path = os.path.join(app.root_path, 'reportes.db')
+    db_path = os.path.join(app.root_path, 'reportes2.db')
     if os.path.exists(db_path):
         try:
             conn = sqlite3.connect(db_path)
